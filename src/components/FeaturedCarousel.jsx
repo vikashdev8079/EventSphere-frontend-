@@ -1,24 +1,50 @@
-import React, { useEffect } from 'react'
-import useEmblaCarousel from 'embla-carousel-react'
-import Autoplay from 'embla-carousel-autoplay'
-import { Button } from './ui/button'
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, MapPin, Sparkles } from 'lucide-react'
-import { Link } from 'react-router'
-import { Badge } from './ui/badge'
+import React, { useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import { Button } from "./ui/button";
+import {
+  ArrowRight,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Sparkles,
+} from "lucide-react";
+import { Link } from "react-router";
+import { Badge } from "./ui/badge";
+import { formatEventDate, formatPrice } from "@/lib/utils";
 
-function FeaturedCarousel({events}) {
-   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false },[Autoplay({delay:4000 , stopOnMouseEnter:true , stopOnInteraction:true})])
+function FeaturedCarousel({ events }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+    Autoplay({
+      delay: 4000,
+      stopOnInteraction: false,
+      stopOnMouseEnter: true,
+      rootNode: (emblaRoot) => emblaRoot.parentElement,
+    }),
+  ]);
 
-  const goToPrev = () => emblaApi?.scrollPrev()
-  const goToNext = () => emblaApi?.scrollNext()
-
-    useEffect(() => {
-    if (!emblaApi) return
-    emblaApi.plugins().autoplay?.play()
-  }, [emblaApi])
+  const goToPrev = () => {
+    emblaApi?.scrollPrev();
+    emblaApi.plugins().autoplay?.reset();
+  };
+  const goToNext = () => {
+    emblaApi?.scrollNext();
+    emblaApi.plugins().autoplay?.reset();
+  };
+  const scrollTo = (i) => {
+    emblaApi.scrollTo(i);
+  };
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", () =>
+      setSelectedIndex(emblaApi.selectedScrollSnap()),
+    );
+  }, [emblaApi]);
 
   return (
-     <div className="relative group">
+    <div className="relative group">
       <div className="overflow-hidden rounded-3xl" ref={emblaRef}>
         <div className="flex">
           {events.map((event) => {
@@ -81,16 +107,16 @@ function FeaturedCarousel({events}) {
                     <div className="flex items-center gap-5 pt-2 text-xs sm:text-sm text-stone-300 font-medium flex-wrap">
                       <span className="flex items-center gap-1.5 text-orange-300 font-semibold">
                         <Calendar className="w-4 h-4" />
-                        {/* {formatEventDate(event.startDate)} */}
-                        {event.startDate}
+                        {formatEventDate(event.startDate)}
+                      
                       </span>
                       <span className="flex items-center gap-1.5 text-stone-300">
                         <MapPin className="w-4 h-4 text-stone-400" />
                         {event.venue}, {event.city}
                       </span>
                       <span className="flex items-center gap-1.5 font-bold text-white bg-white/10 px-2.5 py-1 rounded-lg border border-white/10">
-                        {/* {formatPrice(event.price, event.currency)} */}
-                        {event.price}
+                        {formatPrice(event.price, event.currency)}
+                        
                       </span>
                     </div>
 
@@ -138,10 +164,21 @@ function FeaturedCarousel({events}) {
         <ChevronRight className="w-6 h-6" />
       </button>
 
-
+      <div className="absolute bottom-4 right-6 flex items-center gap-2 z-20">
+        {events.map((_, i) => (
+          <button
+            onClick={() => scrollTo(i)}
+            key={i}
+            className={`transition-all rounded-full ${
+              i === selectedIndex
+                ? "w-6 h-2 bg-[#E65100]"
+                : "w-2 h-2 bg-white/50 hover:bg-white/80"
+            }`}
+          />
+        ))}
       </div>
-
-  )
+    </div>
+  );
 }
 
-export default FeaturedCarousel
+export default FeaturedCarousel;
